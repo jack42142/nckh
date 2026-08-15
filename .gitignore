@@ -1,0 +1,9 @@
+#thư mục ai và web sample 
+/Ai_intergration/models--Qwen--Qwen3-8B/
+/Ai_intergration/TCL/
+
+#AI
+*.safetensors
+*.bin
+*.pt
+*.pth
