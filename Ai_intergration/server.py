@@ -17,7 +17,7 @@ app.add_middleware(
 )
 
 # Đường dẫn snapshot local
-MODEL_PATH = r"C:\Users\thien\Downloads\nghiên cứu khoa học\nckh\models--Qwen--Qwen3-8B\snapshots\b968826d9c46dd6066d109eabc6255188de91218"
+MODEL_PATH = r"C:\Users\thien\Downloads\nghiên cứu khoa học\nckh\Ai_intergration\Qwen3-8B\snapshots\b968826d9c46dd6066d109eabc6255188de91218"
 
 print("[1/2] Đang nạp Tokenizer...")
 tokenizer = AutoTokenizer.from_pretrained(
