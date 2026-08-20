@@ -2,7 +2,7 @@
 /Ai_intergration/Qwen3-8B/
 /Ai_intergration/Qwen3-4B/
 /Ai_intergration/TCL/
-
+/hung
 #AI
 *.safetensors
 *.bin
