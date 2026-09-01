@@ -1,0 +1,25 @@
+{
+  "name": "nckh",
+  "version": "1.0.0",
+  "description": "",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jack42142/nckh.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jack42142/nckh/issues"
+  },
+  "homepage": "https://github.com/jack42142/nckh#readme",
+  "dependencies": {
+    "ngrok": "^5.0.0-beta.2"
+  }
+}

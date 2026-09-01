@@ -8,5 +8,6 @@
 *.bin
 *.pt
 *.pth
-/RAG/models
+/RAG/model
 Dockerfiles
+/node_modules

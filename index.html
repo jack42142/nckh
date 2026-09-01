@@ -3,38 +3,153 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>sản phẩm nghiên cứu khoa học</title>
-    <link rel="icon" type="image/png" href="asset/nguyendu.png">
+  <title>Blog Công Nghệ & Tri Thức</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <header class="header">
-    <h1>Logo / Banner Trang Web</h1>
-  </header>
-
-  <nav class="nav">
-    <a href="#">Trang chủ</a>
-    <a href="#">Giới thiệu</a>
-    <a href="#">Dịch vụ</a>
-    <a href="#">Liên hệ</a>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">TechBlog</div>
+    <div class="nav-links">
+      <button id="nav-home" class="nav-btn active" onclick="switchView('home')">Trang chủ</button>
+      <button id="nav-posts" class="nav-btn" onclick="switchView('posts')">Bài viết</button>
+      <button id="nav-reading" class="nav-btn" style="display: none;" onclick="switchView('reading')">📖 Đọc bài</button>
+    </div>
   </nav>
 
-  <div class="container">
-    <main class="main-content">
-      <h2>Nội dung chính</h2>
-      <p>Đây là khu vực hiển thị các bài viết hoặc nội dung cốt lõi của trang web.</p>
-    </main>
+  <!-- Main Container -->
+  <main class="container">
+    
+    <!-- View: Trang chủ -->
+    <section id="view-home" class="view-section">
+      <div class="intro-hero">
+        <h1>Chào mừng đến với Blog Tri Thức</h1>
+        <p>Nơi chia sẻ kiến thức công nghệ, lập trình và mạng máy tính.</p>
+        <button class="btn-primary" onclick="switchView('posts')">Khám phá bài viết</button>
+      </div>
 
-    <aside class="sidebar">
-      <h3>Sidebar</h3>
-      <p>Danh mục hoặc bài viết nổi bật.</p>
-    </aside>
+      <div class="intro-grid">
+        <div class="intro-card">
+          <h3>💻 Công Nghệ</h3>
+          <p>Cập nhật thông tin công nghệ mới nhất và hướng dẫn lập trình.</p>
+        </div>
+        <div class="intro-card">
+          <h3>🌐 Mạng Máy Tính</h3>
+          <p>Tìm hiểu chi tiết về kiến trúc mạng, giao thức và hạ tầng.</p>
+        </div>
+        <div class="intro-card">
+          <h3>📝 Sáng Tạo Nội Dung</h3>
+          <p>Soạn thảo và quản lý bài viết của riêng bạn với công cụ rich text.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- View: Danh sách bài viết -->
+    <section id="view-posts" class="view-section" style="display: none;">
+      <div class="posts-header">
+        <h2>Danh Sách Bài Viết</h2>
+        <button class="btn-primary" onclick="toggleModal(true)">+ Tạo bài viết mới</button>
+      </div>
+      <div id="postsGrid" class="posts-grid"></div>
+    </section>
+
+    <!-- View: Đọc bài viết -->
+    <section id="view-reading" class="view-section" style="display: none;">
+      <div class="reading-layout">
+        <aside class="toc-sidebar">
+          <h3>Mục Lục</h3>
+          <ul id="tocList"></ul>
+        </aside>
+        <article id="articleContent" class="article-container"></article>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal Tạo bài viết -->
+  <div id="postModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Soạn Thảo Bài Viết Mới</h3>
+        <button class="close-btn" onclick="toggleModal(false)">&times;</button>
+      </div>
+      <form id="createPostForm">
+        <div class="form-group">
+          <label for="postTitle">Tiêu đề bài viết:</label>
+          <input type="text" id="postTitle" required placeholder="Nhập tiêu đề...">
+        </div>
+        <div class="form-group">
+          <label for="postCategory">Danh mục / Chủ đề:</label>
+          <input type="text" id="postCategory" required placeholder="VD: Công nghệ, Mạng máy tính...">
+        </div>
+
+        <!-- Editor Toolbar -->
+        <div class="editor-toolbar">
+          <button type="button" onclick="formatText('bold')" title="In đậm"><b>B</b></button>
+          <button type="button" onclick="formatText('italic')" title="In nghiêng"><i>I</i></button>
+          <button type="button" onclick="formatText('underline')" title="Gạch chân"><u>U</u></button>
+          <button type="button" onclick="formatText('formatBlock', '<h2>')" title="Tiêu đề H2">H2</button>
+          <button type="button" onclick="formatText('formatBlock', '<h3>')" title="Tiêu đề H3">H3</button>
+          <button type="button" onclick="showLinkDialog()" title="Chèn Link">🔗</button>
+          <button type="button" onclick="insertImageUrl()" title="Chèn ảnh bằng URL">🖼️ URL</button>
+          <button type="button" onclick="triggerImageUpload()" title="Tải ảnh lên">📁 File</button>
+          <input type="file" id="imageFileInput" accept="image/*" style="display: none;" onchange="handleImageFile(this)">
+
+          <button type="button" onclick="toggleColorDropdown('textColor')" title="Màu chữ">🎨 Chữ</button>
+          <button type="button" onclick="toggleColorDropdown('bgColor')" title="Màu nền chữ">🖍️ Nền</button>
+
+          <!-- Dropdowns -->
+          <div id="textColorOptions" class="dropdown-panel" style="display: none;">
+            <span style="background: #000000;" onclick="applyTextColor('#000000')"></span>
+            <span style="background: #ef4444;" onclick="applyTextColor('#ef4444')"></span>
+            <span style="background: #3b82f6;" onclick="applyTextColor('#3b82f6')"></span>
+            <span style="background: #10b981;" onclick="applyTextColor('#10b981')"></span>
+            <span style="background: #f59e0b;" onclick="applyTextColor('#f59e0b')"></span>
+          </div>
+
+          <div id="bgColorOptions" class="dropdown-panel" style="display: none;">
+            <span style="background: #fef08a;" onclick="applyBgColor('#fef08a')"></span>
+            <span style="background: #bbf7d0;" onclick="applyBgColor('#bbf7d0')"></span>
+            <span style="background: #bfdbfe;" onclick="applyBgColor('#bfdbfe')"></span>
+            <span style="background: #fbcfe8;" onclick="applyBgColor('#fbcfe8')"></span>
+          </div>
+        </div>
+
+        <!-- Contenteditable Div -->
+        <div id="postContentInput" class="editor-content" contenteditable="true" placeholder="Viết nội dung bài viết ở đây..."></div>
+
+        <div class="form-group" style="margin-top: 1rem;">
+          <label>Xem trước nội dung:</label>
+          <div id="previewArea" class="preview-box"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-danger" onclick="toggleModal(false)">Hủy</button>
+          <button type="submit" class="btn-primary">Lưu bài viết</button>
+        </div>
+      </form>
+    </div>
   </div>
 
-  <footer class="footer">
-    <p>&copy; 2026 Trang Web Của Tôi. All rights reserved.</p>
-  </footer>
+  <!-- Chatbot Floating Widget -->
+  <div class="chatbot-container">
+    <button class="chatbot-toggle" onclick="toggleChatbot()">💬</button>
+    <div id="chatbotWindow" class="chatbot-window" style="display: none;">
+      <div class="chatbot-header">
+        <span>Trợ Lý Trực Tuyến</span>
+        <button onclick="toggleChatbot()">&times;</button>
+      </div>
+      <div id="chatMessages" class="chatbot-messages">
+        <div class="msg msg-bot">Xin chào! Bạn cần hỗ trợ thông tin gì?</div>
+      </div>
+      <div class="chatbot-input">
+        <input type="text" id="chatInput" placeholder="Nhập tin nhắn..." onkeypress="handleChatKeyPress(event)">
+        <button onclick="sendChatMessage()">Gửi</button>
+      </div>
+    </div>
+  </div>
 
+  <script src="script.js"></script>
 </body>
 </html>
