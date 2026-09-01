@@ -1,1 +1,0 @@
-* Special thanks to **Gemini AI** for assisting with Python FastAPI code optimization, Git configuration, and PyTorch setup.

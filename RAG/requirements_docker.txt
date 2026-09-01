@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-airllm
-bitsandbytes
-transformers
-accelerate
-safetensors
-pydantic
