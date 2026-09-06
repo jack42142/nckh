@@ -1,0 +1,918 @@
+<!-- ============================================================
+     Credit: Code được hỗ trợ bởi Claude Code (Anthropic)
+     ============================================================ -->
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Genshin Impact Lore RAG</title>
+  <style>
+    :root {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-card: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.1);
+      --text: #e0e0e0;
+      --text-muted: #888;
+      --gold: #ffd700;
+      --gold-dim: rgba(255,215,0,0.15);
+      --online: #4ade80;
+      --offline: #ef4444;
+      --purple: #667eea;
+      --purple-dark: #764ba2;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: var(--text);
+    }
+
+    /* ── Header ── */
+    .header {
+      background: rgba(0,0,0,0.3);
+      padding: 0.8rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .logo { font-size: 1.6rem; }
+
+    .header h1 {
+      font-size: 1.1rem;
+      color: var(--gold);
+      text-shadow: 0 0 10px rgba(255,215,0,0.3);
+    }
+
+    .header-status {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: background 0.3s;
+    }
+    .status-dot.online { background: var(--online); box-shadow: 0 0 6px var(--online); }
+    .status-dot.offline { background: var(--offline); }
+
+    /* ── Settings bar ── */
+    .settings-bar {
+      background: rgba(0,0,0,0.2);
+      padding: 0.6rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+    }
+
+    .settings-bar label { color: var(--text-muted); }
+
+    .settings-bar input, .settings-bar select {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 0.4rem;
+      padding: 0.3rem 0.6rem;
+      color: var(--gold);
+      font-size: 0.8rem;
+      font-family: 'Consolas', monospace;
+    }
+
+    .settings-bar input:focus, .settings-bar select:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+
+    .settings-bar input[type="number"] { width: 55px; text-align: center; }
+    .settings-bar select { cursor: pointer; }
+
+    .btn {
+      padding: 0.3rem 0.75rem;
+      border-radius: 0.4rem;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .btn-test {
+      background: rgba(255,215,0,0.1);
+      color: var(--gold);
+      border-color: var(--gold);
+    }
+    .btn-test:hover { background: rgba(255,215,0,0.2); }
+    .btn-test.testing { opacity: 0.6; cursor: wait; }
+
+    /* ── Main layout ── */
+    .main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1rem 1rem 0;
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 1rem;
+      height: calc(100vh - 130px);
+    }
+
+    @media (max-width: 700px) {
+      .main { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+    }
+
+    /* ── Chat column ── */
+    .chat-col {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .message {
+      max-width: 85%;
+      padding: 0.8rem 1rem;
+      border-radius: 1rem;
+      line-height: 1.6;
+      animation: fadeIn 0.3s ease;
+      word-break: break-word;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%);
+      color: #fff;
+      border-bottom-right-radius: 0.25rem;
+    }
+
+    .message.bot {
+      align-self: flex-start;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 0.25rem;
+    }
+
+    .message .sender {
+      font-size: 0.7rem;
+      color: var(--gold);
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+    }
+    .message.user .sender { color: rgba(255,255,255,0.6); }
+
+    .message .content { white-space: pre-wrap; }
+
+    /* AI answer box (RAG + AI mode) */
+    .ai-answer {
+      background: linear-gradient(135deg, rgba(255,215,0,0.08) 0%, rgba(255,140,0,0.05) 100%);
+      border-left: 3px solid var(--gold);
+      border-radius: 0.4rem;
+      padding: 0.7rem 0.9rem;
+      margin-bottom: 0.6rem;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .ai-answer .ai-label {
+      font-size: 0.7rem;
+      color: var(--gold);
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .ai-answer.refused {
+      background: rgba(239,68,68,0.08);
+      border-left-color: var(--offline);
+    }
+    .ai-answer.refused .ai-label { color: var(--offline); }
+
+    /* Results inside bot message */
+    .results { margin-top: 0.6rem; border-top: 1px solid var(--border); padding-top: 0.6rem; }
+    .results-label { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+
+    .result-item {
+      background: rgba(0,0,0,0.2);
+      border-radius: 0.4rem;
+      padding: 0.6rem;
+      margin-bottom: 0.4rem;
+      font-size: 0.8rem;
+    }
+
+    .result-item .meta {
+      display: flex; gap: 0.3rem; flex-wrap: wrap;
+      margin-bottom: 0.35rem;
+    }
+
+    .tag {
+      background: var(--gold-dim);
+      color: var(--gold);
+      padding: 0.1rem 0.45rem;
+      border-radius: 1rem;
+      font-size: 0.65rem;
+    }
+
+    .score { color: var(--online); font-size: 0.65rem; margin-left: auto; }
+
+    .result-item .text {
+      color: #aaa;
+      font-size: 0.75rem;
+      line-height: 1.5;
+    }
+
+    .result-item .url { margin-top: 0.35rem; }
+    .result-item .url a { color: #60a5fa; font-size: 0.7rem; }
+
+    /* Typing indicator */
+    .typing {
+      display: flex; gap: 5px; padding: 0.8rem 1rem;
+      align-self: flex-start;
+    }
+    .typing span {
+      width: 7px; height: 7px;
+      background: var(--gold);
+      border-radius: 50%;
+      animation: bounce 1.4s infinite;
+    }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); }
+      40%           { transform: translateY(-7px); }
+    }
+
+    /* Error message */
+    .message.error {
+      border-color: rgba(239,68,68,0.3);
+      background: rgba(239,68,68,0.08);
+    }
+    .message.error .sender { color: var(--offline); }
+
+    /* Welcome screen */
+    .welcome { text-align: center; padding: 2rem 1rem; color: var(--text-muted); }
+    .welcome h2 { color: var(--gold); margin-bottom: 0.75rem; font-size: 1.1rem; }
+    .welcome p { font-size: 0.85rem; margin-bottom: 0.4rem; }
+
+    .examples { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; margin-top: 1rem; }
+    .example-btn {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      color: #aaa;
+      padding: 0.4rem 0.9rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+    .example-btn:hover {
+      background: var(--gold-dim);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    /* ── Input area ── */
+    .input-area {
+      background: rgba(0,0,0,0.2);
+      border-radius: 0.75rem;
+      padding: 0.6rem;
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-end;
+      margin-top: 0.75rem;
+    }
+
+    .input-area textarea {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 0.6rem;
+      padding: 0.6rem 0.9rem;
+      color: #fff;
+      font-size: 0.95rem;
+      resize: none;
+      min-height: 46px;
+      max-height: 140px;
+      font-family: inherit;
+      line-height: 1.5;
+    }
+    .input-area textarea:focus { outline: none; border-color: var(--gold); }
+    .input-area textarea::placeholder { color: #555; }
+
+    .send-btn {
+      background: linear-gradient(135deg, var(--gold) 0%, #ff8c00 100%);
+      border: none;
+      border-radius: 0.6rem;
+      width: 46px; height: 46px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: transform 0.15s, box-shadow 0.15s;
+      flex-shrink: 0;
+    }
+    .send-btn:hover:not(:disabled) {
+      transform: scale(1.06);
+      box-shadow: 0 0 18px rgba(255,215,0,0.4);
+    }
+    .send-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      overflow-y: auto;
+      padding-top: 0.5rem;
+    }
+
+    .sidebar h3 {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+    }
+
+    .info-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 0.6rem;
+      padding: 0.75rem;
+      font-size: 0.78rem;
+    }
+
+    .info-card .label { color: var(--text-muted); font-size: 0.7rem; margin-bottom: 0.2rem; }
+    .info-card .value { color: var(--gold); font-family: 'Consolas', monospace; word-break: break-all; }
+
+    .api-url-display {
+      font-family: 'Consolas', monospace;
+      font-size: 0.75rem;
+      color: #60a5fa;
+      word-break: break-all;
+      background: rgba(0,0,0,0.2);
+      padding: 0.4rem 0.6rem;
+      border-radius: 0.4rem;
+      border: 1px solid var(--border);
+    }
+
+    .coll-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .coll-item {
+      font-size: 0.75rem;
+      color: #aaa;
+      padding: 0.3rem 0.5rem;
+      border-radius: 0.3rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .coll-item:hover { background: var(--gold-dim); color: var(--gold); }
+    .coll-item.active { background: var(--gold-dim); color: var(--gold); }
+
+    .api-test-output {
+      font-family: 'Consolas', monospace;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      white-space: pre-wrap;
+      background: rgba(0,0,0,0.3);
+      padding: 0.5rem;
+      border-radius: 0.4rem;
+      border: 1px solid var(--border);
+      max-height: 180px;
+      overflow-y: auto;
+      word-break: break-word;
+    }
+
+    .api-test-output .ok   { color: var(--online); }
+    .api-test-output .err { color: var(--offline); }
+
+    /* LLM status in sidebar */
+    .llm-status {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      margin-top: 0.3rem;
+    }
+    .llm-status .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+    .llm-status .dot.ready { background: var(--online); box-shadow: 0 0 4px var(--online); }
+    .llm-status .dot.error { background: var(--offline); }
+    .llm-status .dot.pending { background: var(--gold); animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <span class="logo">⚔️</span>
+  <h1>Genshin Impact Lore RAG</h1>
+  <div class="header-status">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText">Checking…</span>
+  </div>
+</div>
+
+<!-- Settings bar -->
+<div class="settings-bar">
+  <label>API URL:</label>
+  <input type="text" id="apiUrl" value="http://localhost:8000" size="22">
+  <button class="btn btn-test" id="testBtn" onclick="testConnection()">🔄 Test</button>
+  <label>Collection:</label>
+  <select id="collectionSel">
+    <option value="genshin_lore">genshin_lore</option>
+    <option value="genshin_test">genshin_test</option>
+  </select>
+  <label>Top K:</label>
+  <input type="number" id="topK" value="4" min="1" max="20">
+  <label>Mode:</label>
+  <select id="modeSel">
+    <option value="ai">✨ RAG + AI</option>
+    <option value="rag">🔍 RAG only</option>
+  </select>
+  <button class="btn" style="background:rgba(255,255,255,0.05);color:#aaa" onclick="clearChat()">🗑️ Clear</button>
+</div>
+
+<!-- Main layout -->
+<div class="main">
+
+  <!-- Chat column -->
+  <div class="chat-col">
+    <div class="messages" id="messages">
+      <div class="welcome" id="welcome">
+        <h2>Chào mừng đến với Genshin Lore RAG! 🎮</h2>
+        <p>Hỏi tôi bất cứ điều gì về cốt truyện, nhân vật, nhiệm vụ Genshin Impact</p>
+        <p style="color:#666;font-size:0.8rem">Dữ liệu từ Genshin Impact Fandom Wiki</p>
+        <div class="examples">
+          <button class="example-btn" onclick="ask('Tell me about Zhongli and his story')">Zhongli lore</button>
+          <button class="example-btn" onclick="ask('What is the lore of Teyvat?')">Teyvat lore</button>
+          <button class="example-btn" onclick="ask('Who is the Pyro Archon?')">Pyro Archon</button>
+          <button class="example-btn" onclick="ask('Tell me about the Archon Quest in Inazuma')">Inazuma Quest</button>
+          <button class="example-btn" onclick="ask('What is Venti\'s story?')">Venti story</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <textarea id="input" placeholder="Nhập câu hỏi về Genshin Impact…" rows="1"
+                onkeydown="handleKey(event)" autofocus></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div>
+      <h3>📡 API</h3>
+      <div class="info-card" style="margin-bottom:0.5rem">
+        <div class="label">Endpoint</div>
+        <div class="api-url-display" id="apiUrlDisplay">http://localhost:8000/generate</div>
+      </div>
+      <div class="info-card">
+        <div class="label">Health</div>
+        <div class="value" id="healthValue" style="color:#666;font-size:0.75rem">—</div>
+      </div>
+      <div class="info-card">
+        <div class="label">✨ LLM (Qwen3.5-2B)</div>
+        <div class="llm-status" id="llmStatus">
+          <span class="dot pending" id="llmDot"></span>
+          <span id="llmText" style="color:#888">Loading…</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3>📦 Collections</h3>
+      <div class="info-card">
+        <div class="coll-list" id="collList">
+          <div class="coll-item" style="color:#555;font-style:italic">Chưa kết nối</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3>🧪 API Test</h3>
+      <div class="info-card">
+        <div style="font-size:0.75rem;color:#666;margin-bottom:0.4rem">Response từ /query:</div>
+        <div class="api-test-output" id="testOutput">Nhấn "Test" để kiểm tra…</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  let isLoading = false;
+
+  // ── Init ──
+  (function init() {
+    // Load saved settings
+    const saved = localStorage.getItem('rag_settings');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        if (s.apiUrl)      $('apiUrl').value         = s.apiUrl;
+        if (s.collection) $('collectionSel').value  = s.collection;
+        if (s.topK)       $('topK').value           = s.topK;
+        if (s.mode)       $('modeSel').value        = s.mode;
+      } catch {}
+    }
+    updateApiDisplay();
+    checkConnection();
+  })();
+
+  // ── Helpers ──
+  function getSettings() {
+    return {
+      apiUrl:      $('apiUrl').value.replace(/\/$/, ''),
+      collection:  $('collectionSel').value,
+      topK:        parseInt($('topK').value) || 4,
+      mode:        $('modeSel').value,
+    };
+  }
+
+  function saveSettings() {
+    const s = getSettings();
+    localStorage.setItem('rag_settings', JSON.stringify(s));
+  }
+
+  function updateApiDisplay() {
+    const { apiUrl, mode } = getSettings();
+    const endpoint = mode === 'ai' ? '/generate' : '/query';
+    $('apiUrlDisplay').textContent = `${apiUrl}${endpoint}`;
+  }
+
+  $('apiUrl').addEventListener('input', () => { updateApiDisplay(); saveSettings(); });
+  $('collectionSel').addEventListener('change', saveSettings);
+  $('topK').addEventListener('change', saveSettings);
+  $('modeSel').addEventListener('change', () => {
+    saveSettings();
+    updateApiDisplay();
+  });
+
+  // ── Connection check ──
+  async function checkConnection() {
+    const { apiUrl } = getSettings();
+    const dot  = $('statusDot');
+    const text = $('statusText');
+    try {
+      const res  = await fetch(`${apiUrl}/health`);
+      if (!res.ok) throw new Error('non-ok');
+      const data = await res.json();
+      dot.className  = 'status-dot online';
+      text.textContent = 'Online';
+      $('healthValue').textContent = `v${data.version} • ${data.chroma_dir}`;
+      loadCollections(data.collections || []);
+      updateLLMStatus(data);
+    } catch {
+      dot.className  = 'status-dot offline';
+      text.textContent = 'Offline';
+      $('healthValue').textContent = 'Không kết nối được';
+      $('collList').innerHTML = '<div class="coll-item" style="color:#555;font-style:italic">Chưa kết nối</div>';
+      $('llmDot').className = 'dot error';
+      $('llmText').textContent = 'Offline';
+      $('llmText').style.color = '#ef4444';
+    }
+  }
+
+  function updateLLMStatus(health) {
+    const dot  = $('llmDot');
+    const text = $('llmText');
+    if (health.llm_loaded) {
+      dot.className = 'dot ready';
+      text.textContent = health.llm_model || 'Qwen3.5-2B';
+      text.style.color = '#4ade80';
+    } else if (health.llm_error) {
+      dot.className = 'dot error';
+      text.textContent = 'Error: ' + health.llm_error.slice(0, 60);
+      text.style.color = '#ef4444';
+    } else {
+      dot.className = 'dot';
+      text.textContent = 'Not loaded';
+      text.style.color = '#888';
+    }
+  }
+
+  async function loadCollections(colls) {
+    const el = $('collList');
+    if (!colls.length) {
+      el.innerHTML = '<div class="coll-item" style="color:#555;font-style:italic">Không có collection</div>';
+      return;
+    }
+    el.innerHTML = colls.map(c =>
+      `<div class="coll-item${c === $('collectionSel').value ? ' active' : ''}"
+             onclick="selectCollection('${c}')">${c}</div>`
+    ).join('');
+  }
+
+  function selectCollection(name) {
+    $('collectionSel').value = name;
+    saveSettings();
+    loadCollections(
+      Array.from($('collList').querySelectorAll('.coll-item'))
+           .map(el => el.textContent)
+           .filter(t => !t.startsWith('Không') && !t.startsWith('Chưa'))
+    );
+  }
+
+  // ── Test connection ──
+  async function testConnection() {
+    const { apiUrl, collection, topK, mode } = getSettings();
+    const endpoint = mode === 'ai' ? '/generate' : '/query';
+    const btn    = $('testBtn');
+    const output = $('testOutput');
+    btn.classList.add('testing');
+    btn.textContent = '⏳…';
+    output.textContent = 'Đang test…';
+
+    try {
+      const body = mode === 'ai'
+        ? { question: 'Zhongli', top_k: 1, collection }
+        : { question: 'Zhongli', top_k: 1, collection };
+      const res  = await fetch(`${apiUrl}${endpoint}`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || res.statusText);
+
+      if (mode === 'ai') {
+        const r = data.sources?.[0];
+        output.innerHTML = [
+          `<span class="ok">✅ Kết nối thành công!</span>`,
+          `Mode: ✨ RAG + AI`,
+          `HTTP ${res.status}`,
+          `Total: ${data.total_time_ms}ms`,
+          `  (retrieve: ${data.retrieval_time_ms}ms | generate: ${data.generation_time_ms}ms)`,
+          `Model: ${data.model}`,
+          `Refused: ${data.refused}`,
+          data.answer ? `\nAI Answer:\n  ${data.answer.slice(0,150)}…` : '',
+          r ? `\nTop source:\n  "${r.title || '?'}" (score: ${r.score?.toFixed(3)})` : '',
+        ].join('\n');
+      } else {
+        const r = data.results?.[0];
+        output.innerHTML = [
+          `<span class="ok">✅ Kết nối thành công!</span>`,
+          `Mode: 🔍 RAG only`,
+          `HTTP ${res.status}`,
+          `Time: ${data.execution_time_ms}ms`,
+          `Model: ${data.model}`,
+          `Results: ${data.results?.length ?? 0}`,
+          r ? `\nTop result:\n  "${r.title || '?'}" (score: ${r.score?.toFixed(3)})\n  ${r.content?.slice(0,120).replace(/\n/g,' ')}…`
+            : '<span class="err">⚠ Không có kết quả</span>'
+        ].join('\n');
+      }
+
+      // Update status
+      $('statusDot').className = 'status-dot online';
+      $('statusText').textContent = 'Online';
+      checkConnection(); // reload collections + LLM status
+    } catch (err) {
+      output.innerHTML = `<span class="err">❌ Lỗi:</span> ${err.message}\n\nURL: ${apiUrl}${endpoint}\nCollection: ${collection}`;
+      $('statusDot').className = 'status-dot offline';
+      $('statusText').textContent = 'Offline';
+    } finally {
+      btn.classList.remove('testing');
+      btn.textContent = '🔄 Test';
+    }
+  }
+
+  // ── Send message ──
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  async function sendMessage() {
+    const input = $('input');
+    const text  = input.value.trim();
+    if (!text || isLoading) return;
+    input.value = '';
+    input.style.height = 'auto';
+    ask(text);
+  }
+
+  async function ask(text) {
+    if (isLoading) return;
+    isLoading = true;
+    $('sendBtn').disabled = true;
+
+    const messages = $('messages');
+    const welcome  = $('welcome');
+    if (welcome) welcome.remove();
+
+    // User message
+    messages.innerHTML += `
+      <div class="message user">
+        <div class="sender">Bạn</div>
+        <div class="content">${escapeHtml(text)}</div>
+      </div>`;
+
+    // Typing indicator
+    const typingId = 'typing-' + Date.now();
+    const loadingText = getSettings().mode === 'ai' ? '🤔 AI đang suy nghĩ…' : '🔍 Đang tìm kiếm…';
+    messages.innerHTML += `
+      <div class="message bot" id="${typingId}">
+        <div class="sender">Genshin RAG Bot</div>
+        <div class="content" style="color:#888;font-style:italic">${loadingText}</div>
+        <div class="typing"><span></span><span></span><span></span></div>
+      </div>`;
+    scrollToBottom();
+
+    const { apiUrl, collection, topK, mode } = getSettings();
+    const endpoint = mode === 'ai' ? '/generate' : '/query';
+    const body = mode === 'ai'
+      ? { question: text, top_k: topK, collection }
+      : { question: text, top_k: topK, collection };
+
+    try {
+      const res  = await fetch(`${apiUrl}${endpoint}`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(body)
+      });
+      $(typingId).remove();
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (mode === 'ai') showAIResponse(data);
+      else showBotResponse(data);
+    } catch (err) {
+      $(typingId).remove();
+      messages.innerHTML += `
+        <div class="message bot error">
+          <div class="sender">System</div>
+          <div class="content">❌ Không thể kết nối đến server.\n\n${err.message}\n\nĐảm bảo đã chạy: python app.py\nAPI URL: ${apiUrl}</div>
+        </div>`;
+    }
+
+    isLoading = false;
+    $('sendBtn').disabled = false;
+    scrollToBottom();
+  }
+
+  function showBotResponse(data) {
+    const messages = $('messages');
+
+    if (!data.results?.length) {
+      messages.innerHTML += `
+        <div class="message bot">
+          <div class="sender">Genshin RAG Bot</div>
+          <div class="content">Không tìm thấy kết quả phù hợp. Thử hỏi câu khác nhé!</div>
+        </div>`;
+      return;
+    }
+
+    const top = data.results[0];
+    let html = `
+      <div class="message bot">
+        <div class="sender">Genshin RAG Bot • ⏱ ${data.execution_time_ms}ms</div>
+        <div class="content">${escapeHtml(top.content)}</div>
+        <div class="results">
+          <div class="results-label">🔍 Top ${data.results.length} kết quả liên quan:</div>`;
+
+    data.results.forEach((r, i) => {
+      const tags = [];
+      ['title','section','category','element','region'].forEach(k => {
+        if (r.metadata?.[k]) tags.push(`<span class="tag">${r.metadata[k]}</span>`);
+      });
+
+      html += `
+        <div class="result-item">
+          <div class="meta">
+            ${tags.join('')}
+            <span class="score">${r.score.toFixed(3)}</span>
+          </div>
+          <div class="text">${escapeHtml(r.content.slice(0,200).replace(/\n/g,' '))}…</div>
+          ${r.metadata?.url ? `<div class="url"><a href="${r.metadata.url}" target="_blank">🔗 Nguồn</a></div>` : ''}
+        </div>`;
+    });
+
+    html += '</div></div>';
+    messages.innerHTML += html;
+  }
+
+  function showAIResponse(data) {
+    const messages = $('messages');
+    const timing = `⏱ retrieve: ${data.retrieval_time_ms}ms | generate: ${data.generation_time_ms}ms | total: ${data.total_time_ms}ms`;
+
+    // AI Answer box (gold border)
+    const answerClass = data.refused ? 'ai-answer refused' : 'ai-answer';
+    const label       = data.refused ? '⚠️ Ngoài phạm vi' : '✨ AI trả lời';
+    const answerText  = data.answer || '(không có phản hồi)';
+
+    let html = `
+      <div class="message bot">
+        <div class="sender">Genshin RAG Bot • ${timing}</div>
+        <div class="${answerClass}">
+          <div class="ai-label">${label}</div>
+          <div>${escapeHtml(answerText)}</div>
+        </div>`;
+
+    // Sources
+    if (data.sources?.length) {
+      html += `
+        <div class="results">
+          <div class="results-label">📚 Nguồn (${data.sources.length} kết quả, top score: ${data.top_score?.toFixed(3) || '?'}):</div>`;
+      data.sources.forEach((r, i) => {
+        const tags = [];
+        ['title','section','category','element','region'].forEach(k => {
+          if (r.metadata?.[k]) tags.push(`<span class="tag">${r.metadata[k]}</span>`);
+        });
+        html += `
+          <div class="result-item">
+            <div class="meta">
+              ${tags.join('')}
+              <span class="score">${r.score.toFixed(3)}</span>
+            </div>
+            <div class="text">${escapeHtml(r.content.slice(0,200).replace(/\n/g,' '))}…</div>
+            ${r.metadata?.url ? `<div class="url"><a href="${r.metadata.url}" target="_blank">🔗 Nguồn</a></div>` : ''}
+          </div>`;
+      });
+      html += '</div>';
+    }
+
+    html += '</div>';
+    messages.innerHTML += html;
+  }
+
+  function clearChat() {
+    $('messages').innerHTML = `
+      <div class="welcome" id="welcome">
+        <h2>Chào mừng đến với Genshin Lore RAG! 🎮</h2>
+        <p>Hỏi tôi bất cứ điều gì về cốt truyện, nhân vật, nhiệm vụ Genshin Impact</p>
+        <p style="color:#666;font-size:0.8rem">Dữ liệu từ Genshin Impact Fandom Wiki</p>
+        <div class="examples">
+          <button class="example-btn" onclick="ask('Tell me about Zhongli and his story')">Zhongli lore</button>
+          <button class="example-btn" onclick="ask('What is the lore of Teyvat?')">Teyvat lore</button>
+          <button class="example-btn" onclick="ask('Who is the Pyro Archon?')">Pyro Archon</button>
+          <button class="example-btn" onclick="ask('Tell me about the Archon Quest in Inazuma')">Inazuma Quest</button>
+          <button class="example-btn" onclick="ask('What is Venti\'s story?')">Venti story</button>
+        </div>
+      </div>`;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function scrollToBottom() {
+    const messages = $('messages');
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  // Auto-resize textarea
+  $('input').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 140) + 'px';
+  });
+</script>
+
+</body>
+</html>

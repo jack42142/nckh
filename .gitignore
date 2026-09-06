@@ -1,4 +1,4 @@
-#thư mục ai và web sample 
+#thư mục ai và web sample
 /Ai_intergration/Qwen3-8B/
 /Ai_intergration/Qwen3-4B/
 /Ai_intergration/TCL/
@@ -9,5 +9,15 @@
 *.pt
 *.pth
 /RAG/model
+#RAG large data files and caches
+/RAG/chroma_data/
+/RAG/genshin_pages_lore.json
+/RAG/genshin_chunks_lore.json
+/RAG/genshin_chunks_legacy.json
+/RAG/genshin_chunks_test.json
+/RAG/genshin_rag_pages_en.json
+/RAG/crawl_cache_en.db
+/RAG/crawl_cache_lore.db
+/RAG/__pycache__/
 Dockerfiles
 /node_modules
