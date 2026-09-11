@@ -49,20 +49,17 @@ function applyUserMode() {
       userRoleBadge.className = 'admin-badge';
       userRoleBadge.textContent = '🔧 Admin';
     }
+    // Hiển thị nút tạo bài viết cho admin mode
+    const createBtn = document.querySelector('.btn-primary[onclick*="toggleModal"]');
+    if (createBtn) createBtn.style.display = 'block';
   } else {
     if (userRoleBadge) {
       userRoleBadge.className = 'user-badge';
       userRoleBadge.textContent = '👤 Người dùng (Chỉ đọc)';
     }
-    // Ẩn các chức năng admin cho user mode
+    // Ẩn nút tạo bài viết cho user mode
     const createBtn = document.querySelector('.btn-primary[onclick*="toggleModal"]');
     if (createBtn) createBtn.style.display = 'none';
-
-    // Ẩn các nút delete
-    setTimeout(() => {
-      const deleteBtns = document.querySelectorAll('.btn-danger[onclick*="deletePost"]');
-      deleteBtns.forEach(btn => btn.style.display = 'none');
-    }, 100);
   }
 }
 
@@ -165,14 +162,26 @@ async function renderPostsList() {
   if (!postsGrid) return;
 
   const posts = getStoredPosts();
+  const isAdmin = getCookie('role') === 'admin';
 
   if (posts.length === 0) {
-    postsGrid.innerHTML = `
-      <div style="grid-column: 1/-1; text-align:center; padding:3rem; background:white; border-radius:12px;">
-        <h3>Chưa có bài viết nào!</h3>
-        <p>Bấm nút "+ Tạo bài viết mới" để bắt đầu soạn bài.</p>
-      </div>
-    `;
+    if (isAdmin) {
+      // Admin view - keep original message
+      postsGrid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align:center; padding:3rem; background:white; border-radius:12px;">
+          <h3>Chưa có bài viết nào!</h3>
+          <p>Bấm nút "+ Tạo bài viết mới" để bắt đầu soạn bài.</p>
+        </div>
+      `;
+    } else {
+      // User view - show approval message
+      postsGrid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align:center; padding:3rem; background:white; border-radius:12px;">
+          <h3>Các bài viết đang được quản trị viên duyệt</h3>
+          <p>Bạn hay thử lại sau nhé!</p>
+        </div>
+      `;
+    }
     return;
   }
 
@@ -181,7 +190,6 @@ async function renderPostsList() {
     tempDiv.innerHTML = post.content || '';
     const snippet = (tempDiv.textContent || tempDiv.innerText || '').substring(0, 110) + '...';
 
-    const isAdmin = getCookie('role') === 'admin';
     const deleteButton = isAdmin ? `
       <button class="btn-danger" onclick="${getOnclickAction('deletePost', post.id)}">Xóa</button>` : '';
 
