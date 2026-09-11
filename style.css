@@ -60,6 +60,12 @@ body {
   color: var(--primary);
 }
 
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .container {
   max-width: 1100px;
   margin: 2rem auto;
@@ -258,10 +264,15 @@ body {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.5);
-  display: flex;
+  display: none;
   justify-content: center;
   align-items: center;
   z-index: 200;
+}
+
+.modal-overlay[style*="display: flex"],
+.modal-overlay.show {
+  display: flex;
 }
 
 .modal-content {
@@ -362,3 +373,78 @@ body {
 .chatbot-input { display: flex; padding: 0.5rem; border-top: 1px solid var(--border-color); }
 .chatbot-input input { flex: 1; padding: 0.4rem; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.85rem; }
 .chatbot-input button { margin-left: 0.3rem; background: var(--primary); color: white; border: none; padding: 0 0.6rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+
+/* Login Page Styles - only apply when on login page */
+body.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+}
+
+body.login-page .container {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+body.login-page .login-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+body.login-page .login-card h2 {
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+body.login-page .login-card p {
+  color: #64748b;
+  margin-bottom: 1rem;
+}
+
+body.login-page .login-card .form-group {
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+body.login-page .login-card select,
+body.login-page .login-card input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+body.login-page .login-card .btn-primary {
+  width: 100%;
+  padding: 0.7rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* User mode indicators */
+.user-badge {
+  background: #10b981;
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.admin-badge {
+  background: #ef4444;
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+}

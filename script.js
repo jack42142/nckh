@@ -1,24 +1,5 @@
-const INITIAL_POSTS = [
-  {
-    id: "post-default-1",
-    title: "Hướng Dẫn Tìm Hiểu Về Mạng Máy Tính",
-    category: "Công nghệ thông tin",
-    date: "01/09/2026",
-    content: `
-      <h2>1. Mạng máy tính là gì?</h2>
-      <p>Mạng máy tính là tập hợp các máy tính được kết nối với nhau để trao đổi dữ liệu và chia sẻ tài nguyên.</p>
-      <div class="article-image">
-        <img src="https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800" alt="Mạng máy tính">
-        <span class="caption">Hình 1: Hệ thống kết nối mạng dữ liệu.</span>
-      </div>
-      <h2>2. Các loại mạng phổ biến</h2>
-      <h3>2.1. Mạng cục bộ (LAN)</h3>
-      <p>LAN kết nối các thiết bị trong phạm vi hẹp như nhà ở, văn phòng.</p>
-      <h3>2.2. Mạng diện rộng (WAN)</h3>
-      <p>WAN kết nối các thiết bị ở khoảng cách xa qua nhiều quốc gia.</p>
-    `
-  }
-];
+// Cache trong bộ nhớ — nguồn dữ liệu thật nằm trên server (/data/post/)
+let localPostsCache = [];
 
 function escapeHtmlText(text) {
   if (!text) return '';
@@ -43,12 +24,55 @@ function getOnclickAction(actionFn, value) {
 let currentActivePostId = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  initStorage();
-  renderPostsList();
+  applyUserMode();
+  loadPostsFromServer();
   animateElementsOnLoad();
   setupLogoEffect();
   setupEditorEvents();
 });
+
+function getCookie(name) {
+  const cookies = document.cookie.split(';');
+  for (let cookie of cookies) {
+    const [cookieName, cookieValue] = cookie.trim().split('=');
+    if (cookieName === name) return cookieValue;
+  }
+  return null;
+}
+
+function applyUserMode() {
+  const userRole = getCookie('role') || 'user';
+  const userRoleBadge = document.getElementById('userRoleBadge');
+
+  if (userRole === 'admin') {
+    if (userRoleBadge) {
+      userRoleBadge.className = 'admin-badge';
+      userRoleBadge.textContent = '🔧 Admin';
+    }
+  } else {
+    if (userRoleBadge) {
+      userRoleBadge.className = 'user-badge';
+      userRoleBadge.textContent = '👤 Người dùng (Chỉ đọc)';
+    }
+    // Ẩn các chức năng admin cho user mode
+    const createBtn = document.querySelector('.btn-primary[onclick*="toggleModal"]');
+    if (createBtn) createBtn.style.display = 'none';
+
+    // Ẩn các nút delete
+    setTimeout(() => {
+      const deleteBtns = document.querySelectorAll('.btn-danger[onclick*="deletePost"]');
+      deleteBtns.forEach(btn => btn.style.display = 'none');
+    }, 100);
+  }
+}
+
+function logout() {
+  if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+    document.cookie = 'role=; expires=Thu, 01 Jan 1970 00:00:00; path=/';
+    document.cookie = 'loggedIn=; expires=Thu, 01 Jan 1970 00:00:00; path=/';
+    window.location.href = 'login.html';
+  }
+}
 
 function animateElementsOnLoad() {
   const introCards = document.querySelectorAll('.intro-card');
@@ -77,18 +101,28 @@ function setupLogoEffect() {
   }
 }
 
-function initStorage() {
-  if (!localStorage.getItem('user_posts')) {
-    localStorage.setItem('user_posts', JSON.stringify(INITIAL_POSTS));
+// API client - tải bài viết từ server
+async function fetchPosts() {
+  try {
+    const response = await fetch('/api/posts');
+    const data = await response.json();
+    localPostsCache = data.posts || [];
+  } catch (err) {
+    console.error('Lỗi tải bài viết từ server:', err);
+    localPostsCache = [];
   }
+  return localPostsCache;
 }
 
+// Lấy bài viết từ cache (đã đồng bộ với server)
 function getStoredPosts() {
-  return JSON.parse(localStorage.getItem('user_posts')) || [];
+  return localPostsCache;
 }
 
-function savePostsToStorage(posts) {
-  localStorage.setItem('user_posts', JSON.stringify(posts));
+// Cập nhật cache và tải lại danh sách từ server
+async function loadPostsFromServer() {
+  await fetchPosts();
+  renderPostsList();
 }
 
 function switchView(viewName) {
@@ -126,7 +160,7 @@ function switchView(viewName) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function renderPostsList() {
+async function renderPostsList() {
   const postsGrid = document.getElementById('postsGrid');
   if (!postsGrid) return;
 
@@ -147,6 +181,10 @@ function renderPostsList() {
     tempDiv.innerHTML = post.content || '';
     const snippet = (tempDiv.textContent || tempDiv.innerText || '').substring(0, 110) + '...';
 
+    const isAdmin = getCookie('role') === 'admin';
+    const deleteButton = isAdmin ? `
+      <button class="btn-danger" onclick="${getOnclickAction('deletePost', post.id)}">Xóa</button>` : '';
+
     return `
       <div class="post-card animate-fade-in">
         <div>
@@ -158,7 +196,8 @@ function renderPostsList() {
           <span>${escapeHtmlText(post.date)}</span>
           <div class="card-actions">
             <button class="btn-primary" onclick="${getOnclickAction('readPost', post.id)}" style="padding:0.3rem 0.8rem; font-size:0.85rem;">Đọc bài</button>
-            <button class="btn-danger" onclick="${getOnclickAction('deletePost', post.id)}">Xóa</button>
+            ${isAdmin ? `<button class="btn-primary" onclick="${getOnclickAction('editPost', post.id)}" style="padding:0.3rem 0.8rem; font-size:0.85rem; background:#2563eb;">Chỉnh sửa</button>` : ''}
+            ${deleteButton}
           </div>
         </div>
       </div>
@@ -176,7 +215,7 @@ function readPost(postId) {
   const articleContent = document.getElementById('articleContent');
   articleContent.innerHTML = `
     <h1 class="post-title">${escapeHtmlText(post.title)}</h1>
-    <div class="post-meta">Danh mục: ${escapeHtmlText(post.category)} \vert{} Ngày đăng: ${escapeHtmlText(post.date)}</div>
+    <div class="post-meta">Danh mục: ${escapeHtmlText(post.category)} | Ngày đăng: ${escapeHtmlText(post.date)}</div>
     <div class="article-body">${post.content}</div>
   `;
 
@@ -217,11 +256,106 @@ function generateTOC() {
   });
 }
 
-function deletePost(postId) {
-  if (confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) {
+// Edit post functionality
+function editPost(postId) {
+  const posts = getStoredPosts();
+  const post = posts.find(p => p.id === postId);
+  if (!post) return;
+
+  // Populate form with post data
+  document.getElementById('postTitle').value = post.title;
+  document.getElementById('postCategory').value = post.category;
+  document.getElementById('postContentInput').innerHTML = post.content;
+
+  // Update form submit handler to update instead of create
+  const form = document.getElementById('createPostForm');
+  form.onsubmit = async function (e) {
+    e.preventDefault();
+
+    const titleInput = document.getElementById('postTitle');
+    const categoryInput = document.getElementById('postCategory');
+    const postContentInput = document.getElementById('postContentInput');
+
+    const title = titleInput ? titleInput.value.trim() : '';
+    const category = categoryInput ? categoryInput.value.trim() : '';
+    const contentHTML = postContentInput ? postContentInput.innerHTML.trim() : '';
+
+    if (!title || !category) {
+      alert('Vui lòng điền đầy đủ tiêu đề và danh mục!');
+      return;
+    }
+
+    const isEmpty = !contentHTML || contentHTML === '<br>' || contentHTML === '<div><br></div>';
+    if (isEmpty) {
+      alert('Vui lòng nhập nội dung bài viết!');
+      return;
+    }
+
+    const updatedPost = {
+      id: postId,
+      title: title,
+      category: category,
+      date: new Date().toLocaleDateString('vi-VN'),
+      content: contentHTML
+    };
+
+    try {
+      const response = await fetch(`/api/posts/${encodeURIComponent(postId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedPost)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        alert(result.error || 'Không thể cập nhật bài viết');
+        return;
+      }
+
+      // Reload posts list
+      await loadPostsFromServer();
+
+      // Reset form and close modal
+      toggleModal(false);
+      resetPostForm();
+
+      // Restore original form submit handler
+      form.onsubmit = originalFormSubmit;
+
+      // Optionally open the updated post for reading
+      readPost(postId);
+    } catch (err) {
+      alert('Lỗi khi cập nhật bài viết: ' + err.message);
+    }
+  };
+
+  toggleModal(true);
+  document.getElementById('postModal').querySelector('.modal-header h3').textContent = 'Chỉnh Sửa Bài Viết';
+  document.getElementById('createPostForm').querySelector('button[type="submit"]').textContent = 'Cập nhật bài viết';
+}
+
+// Store original form submit handler
+let originalFormSubmit = null;
+
+async function deletePost(postId) {
+  if (!confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) return;
+
+  try {
+    const response = await fetch(`/api/posts/${encodeURIComponent(postId)}`, {
+      method: 'DELETE'
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      alert(result.error || 'Không thể xóa bài viết');
+      return;
+    }
+
     let posts = getStoredPosts();
     posts = posts.filter(p => p.id !== postId);
-    savePostsToStorage(posts);
+    localPostsCache = posts;
     renderPostsList();
 
     if (currentActivePostId === postId) {
@@ -229,11 +363,16 @@ function deletePost(postId) {
       document.getElementById('nav-reading').style.display = 'none';
       switchView('posts');
     }
+  } catch (err) {
+    alert('Lỗi khi xóa bài viết: ' + err.message);
   }
 }
 
 function toggleModal(show) {
-  document.getElementById('postModal').style.display = show ? 'flex' : 'none';
+  const modal = document.getElementById('postModal');
+  if (modal) {
+    modal.style.display = show ? 'flex' : 'none';
+  }
 }
 
 function triggerImageUpload() {
@@ -263,7 +402,8 @@ function insertImageUrl() {
   }
 }
 
-document.getElementById('createPostForm').addEventListener('submit', function (e) {
+// Store the original form submit handler for creating posts
+originalFormSubmit = async function (e) {
   e.preventDefault();
 
   const titleInput = document.getElementById('postTitle');
@@ -286,22 +426,41 @@ document.getElementById('createPostForm').addEventListener('submit', function (e
   }
 
   const newPost = {
-    id: 'post-' + Date.now(),
     title: title,
     category: category,
     date: new Date().toLocaleDateString('vi-VN'),
     content: contentHTML
   };
 
-  const posts = getStoredPosts();
-  posts.unshift(newPost);
-  savePostsToStorage(posts);
+  // Gửi bài viết lên server
+  try {
+    const response = await fetch('/api/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newPost)
+    });
 
-  toggleModal(false);
-  resetPostForm();
-  renderPostsList();
-  readPost(newPost.id);
-});
+    const result = await response.json();
+
+    if (!response.ok) {
+      alert(result.error || 'Không thể tạo bài viết mới');
+      return;
+    }
+
+    // Dùng bài viết trả về từ server (có id do server sinh)
+    const savedPost = result.post;
+    await loadPostsFromServer();
+
+    toggleModal(false);
+    resetPostForm();
+    renderPostsList();
+    readPost(savedPost.id);
+  } catch (err) {
+    alert('Lỗi khi tạo bài viết: ' + err.message);
+  }
+};
+
+document.getElementById('createPostForm').addEventListener('submit', originalFormSubmit);
 
 function formatText(command, value = null) {
   const contentInput = document.getElementById('postContentInput');

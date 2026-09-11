@@ -3,20 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blog Công Nghệ & Tri Thức</title>
+  <title>thocung.com</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <!-- Navbar -->
   <nav class="navbar">
-    <div class="logo">TechBlog</div>
+    <div class="logo">Thờ cúng gia tiên</div>
     <div class="nav-links">
       <button id="nav-home" class="nav-btn active" onclick="switchView('home')">Trang chủ</button>
       <button id="nav-posts" class="nav-btn" onclick="switchView('posts')">Bài viết</button>
       <button id="nav-reading" class="nav-btn" style="display: none;" onclick="switchView('reading')">📖 Đọc bài</button>
     </div>
+    <div class="user-info">
+      <span id="userRoleBadge"></span>
+      <button class="nav-btn" onclick="logout()" style="margin-left: 0.5rem; color: #ef4444;">Đăng xuất</button>
+    </div>
   </nav>
+
+
+
 
   <!-- Main Container -->
   <main class="container">
@@ -24,7 +31,7 @@
     <!-- View: Trang chủ -->
     <section id="view-home" class="view-section">
       <div class="intro-hero">
-        <h1>Chào mừng đến với Blog Tri Thức</h1>
+        <h1>Blog cung cấp bla bla</h1>
         <p>Nơi chia sẻ kiến thức công nghệ, lập trình và mạng máy tính.</p>
         <button class="btn-primary" onclick="switchView('posts')">Khám phá bài viết</button>
       </div>
@@ -68,7 +75,7 @@
   </main>
 
   <!-- Modal Tạo bài viết -->
-  <div id="postModal" class="modal-overlay">
+  <div id="postModal" class="modal-overlay" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
         <h3>Soạn Thảo Bài Viết Mới</h3>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng Nhập </title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-page">
+
+  <div class="container">
+    <div class="login-card">
+      <h2>Đăng nhập</h2>
+      <p>Vui lòng chọn chế độ truy cập của bạn:</p>
+
+      <div class="form-group">
+        <label>Chọn vai trò</label>
+        <select id="userRole">
+          <option value="user" selected>Người dùng - Chỉ đọc</option>
+          <option value="admin">Admin - Quản trị viên</option>
+        </select>
+      </div>
+
+      <div id="adminLoginSection" class="form-group" style="display: none;">
+        <label>Mật khẩu Admin</label>
+        <input type="password" id="adminPassword" placeholder="Nhập mật khẩu...">
+      </div>
+
+      <button id="loginBtn" class="btn-primary" onclick="login()">Đăng nhập</button>
+      <p style="margin-top: 1rem; font-size: 0.85rem; color: #64748b;">Mật khẩu admin: admin123</p>
+    </div>
+  </div>
+
+  <script>
+    const roleSelect = document.getElementById('userRole');
+    const adminSection = document.getElementById('adminLoginSection');
+
+    roleSelect.addEventListener('change', function() {
+      if (this.value === 'admin') {
+        adminSection.style.display = 'block';
+      } else {
+        adminSection.style.display = 'none';
+      }
+    });
+
+    function login() {
+      const role = roleSelect.value;
+      const password = document.getElementById('adminPassword').value;
+
+      if (role === 'admin') {
+        if (password === 'admin123') {
+          setCookie('role', 'admin');
+          setCookie('loggedIn', 'true');
+          window.location.href = 'index.html';
+        } else {
+          alert('Mật khẩu admin không đúng! Vui lòng thử lại.');
+        }
+      } else {
+        setCookie('role', 'user');
+        setCookie('loggedIn', 'true');
+        window.location.href = 'index.html';
+      }
+    }
+
+    function setCookie(name, value, days) {
+      days = days || 7;
+      const date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      document.cookie = name + "=" + value + ";expires=" + date.toUTCString() + ";path=/";
+    }
+  </script>
+
+</body>
+</html>
