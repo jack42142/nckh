@@ -467,7 +467,6 @@ function formatText(command, value = null) {
   if (contentInput) {
     contentInput.focus();
     document.execCommand(command, false, value);
-    updatePreview();
   }
 }
 
@@ -475,19 +474,16 @@ function showLinkDialog() {
   const url = prompt('Nhập URL siêu liên kết:');
   if (url) {
     document.execCommand('createLink', false, url);
-    updatePreview();
   }
 }
 
 function applyTextColor(color) {
   document.execCommand('foreColor', false, color);
-  updatePreview();
   hideColorDropdowns();
 }
 
 function applyBgColor(color) {
   document.execCommand('backColor', false, color);
-  updatePreview();
   hideColorDropdowns();
 }
 
@@ -511,30 +507,16 @@ function hideColorDropdowns() {
   if (bgOptions) bgOptions.style.display = 'none';
 }
 
-function updatePreview() {
-  const postContentInput = document.getElementById('postContentInput');
-  const previewArea = document.getElementById('previewArea');
-  if (postContentInput && previewArea) {
-    const contentHTML = postContentInput.innerHTML;
-    if (!contentHTML.trim() || contentHTML === '<br>' || contentHTML === '<div><br></div>') {
-      previewArea.innerHTML = '<em>Nội dung sẽ hiển thị ở đây...</em>';
-    } else {
-      previewArea.innerHTML = contentHTML;
-    }
-  }
-}
-
 function resetPostForm() {
   document.getElementById('createPostForm').reset();
   const contentDiv = document.getElementById('postContentInput');
   if (contentDiv) contentDiv.innerHTML = '';
-  updatePreview();
 }
 
 function setupEditorEvents() {
   const postContentInput = document.getElementById('postContentInput');
   if (postContentInput) {
-    postContentInput.addEventListener('input', updatePreview);
+    // Removed preview event listener
   }
 }
 
