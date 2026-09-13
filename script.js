@@ -52,6 +52,10 @@ function applyUserMode() {
     // Hiển thị nút tạo bài viết cho admin mode
     const createBtn = document.querySelector('.btn-primary[onclick*="toggleModal"]');
     if (createBtn) createBtn.style.display = 'block';
+
+    // Hiển thị nút cập nhật RAG cho admin
+    const rebuildBtn = document.getElementById('btnRebuildRAG');
+    if (rebuildBtn) rebuildBtn.style.display = 'inline-block';
   } else {
     if (userRoleBadge) {
       userRoleBadge.className = 'user-badge';
@@ -60,6 +64,8 @@ function applyUserMode() {
     // Ẩn nút tạo bài viết cho user mode
     const createBtn = document.querySelector('.btn-primary[onclick*="toggleModal"]');
     if (createBtn) createBtn.style.display = 'none';
+    const rebuildBtn = document.getElementById('btnRebuildRAG');
+    if (rebuildBtn) rebuildBtn.style.display = 'none';
   }
 }
 
@@ -533,27 +539,110 @@ function toggleChatbot() {
   chatWin.style.display = (chatWin.style.display === 'flex') ? 'none' : 'flex';
 }
 
-function sendChatMessage() {
+// RAG Chat function - calls Node.js /api/chat which proxies to Python RAG
+async function sendChatMessage() {
   const input = document.getElementById('chatInput');
   const msgContainer = document.getElementById('chatMessages');
   const text = input.value.trim();
   if (!text) return;
 
+  // User message
   const userMsg = document.createElement('div');
   userMsg.className = 'msg msg-user';
   userMsg.textContent = text;
   msgContainer.appendChild(userMsg);
   input.value = '';
+  msgContainer.scrollTop = msgContainer.scrollHeight;
 
-  setTimeout(() => {
+  // Loading indicator with typing dots
+  const loadingMsg = document.createElement('div');
+  loadingMsg.className = 'msg msg-bot';
+  loadingMsg.innerHTML = `<span class="typing-dots"><span></span><span></span><span></span></span>`;
+  msgContainer.appendChild(loadingMsg);
+  msgContainer.scrollTop = msgContainer.scrollHeight;
+
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: text })
+    });
+
+    const data = await response.json();
+
+    // Remove loading message
+    loadingMsg.remove();
+
+    // Bot answer
     const botMsg = document.createElement('div');
     botMsg.className = 'msg msg-bot';
-    botMsg.textContent = `Hệ thống đã nhận câu hỏi: "${text}". Trợ lý sẽ cập nhật thông tin sớm nhất!`;
+
+    let answerText = data.answer || 'Xin lỗi, không tìm được câu trả lời cho câu hỏi này.';
+    const statusLabel = data.status === 'fallback' ? ' ⚠️ (chế độ ngoại tuyến)' : '';
+
+    // Simple markdown formatting
+    answerText = answerText
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/\n/g, '<br>');
+
+    botMsg.innerHTML = answerText + statusLabel;
     msgContainer.appendChild(botMsg);
-    msgContainer.scrollTop = msgContainer.scrollHeight;
-  }, 400);
+
+    // Show sources if available
+    if (data.sources && data.sources.length > 0) {
+      const srcMsg = document.createElement('div');
+      srcMsg.className = 'msg msg-bot';
+      srcMsg.style.fontSize = '0.8rem';
+      srcMsg.style.color = '#64748b';
+      srcMsg.innerHTML = `<i>📚 Nguồn: ${data.sources.map(s => s.title || 'Bài viết').join(', ')}</i>`;
+      msgContainer.appendChild(srcMsg);
+    }
+  } catch (err) {
+    loadingMsg.remove();
+    const botMsg = document.createElement('div');
+    botMsg.className = 'msg msg-bot';
+    botMsg.textContent = 'Lỗi kết nối đến hệ thống RAG. Vui lòng thử lại sau.';
+    msgContainer.appendChild(botMsg);
+  }
+
+  msgContainer.scrollTop = msgContainer.scrollHeight;
 }
 
 function handleChatKeyPress(e) {
   if (e.key === 'Enter') sendChatMessage();
+}
+
+// Admin: Trigger RAG rebuild
+async function rebuildRAG() {
+  if (!confirm('Cập nhật dữ liệu RAG? Thao tác này sẽ rebuild index từ /data/post/')) return;
+
+  const msgContainer = document.getElementById('chatMessages');
+  const statusMsg = document.createElement('div');
+  statusMsg.className = 'msg msg-bot';
+  statusMsg.textContent = '🔄 Đang cập nhật dữ liệu RAG...';
+  msgContainer.appendChild(statusMsg);
+
+  try {
+    const response = await fetch('/api/rag/rebuild', { method: 'POST' });
+    const data = await response.json();
+    statusMsg.remove();
+
+    const resultMsg = document.createElement('div');
+    resultMsg.className = 'msg msg-bot';
+    if (response.ok) {
+      resultMsg.innerHTML = `✅ <strong>Cập nhật RAG thành công!</strong><br><small>Đã index ${data.count || 0} chunks</small>`;
+    } else {
+      resultMsg.textContent = `❌ Lỗi: ${data.error || 'Không thể cập nhật RAG'}`;
+    }
+    msgContainer.appendChild(resultMsg);
+  } catch (err) {
+    statusMsg.remove();
+    const resultMsg = document.createElement('div');
+    resultMsg.className = 'msg msg-bot';
+    resultMsg.textContent = '❌ Lỗi kết nối đến RAG server.';
+    msgContainer.appendChild(resultMsg);
+  }
+
+  msgContainer.scrollTop = msgContainer.scrollHeight;
 }

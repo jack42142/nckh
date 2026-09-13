@@ -1,0 +1,30 @@
+C:\Users\thien\Downloads\nghiên cứu khoa học\nckh\RAG\rag_server.py:96: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[+] Đang xây dựng index RAG từ /data/post/...
+[+] Initializing ThocungRAG...
+[+] Loading embedding model: keepitreal/vietnamese-sbert
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 52746.87it/s]
+    -> Model loaded successfully
+[+] Using existing collection: thocung_articles
+[+] Tìm thấy 4 file HTML trong C:\Users\thien\Downloads\nghiên cứu khoa học\nckh\data\post
+    Processing: post-1789229598430.html
+    Processing: post-1789229799346.html
+    Processing: post-1789229924741.html
+    Processing: post-1789230042029.html
+[+] Xóa 4 chunks cũ...
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  3.71it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  3.70it/s]
+INFO:     Started server process [21452]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    [Errno 10048] error while attempting to bind on address ('127.0.0.1', 8000): [winerror 10048] only one usage of each socket address (protocol/network address/port) is normally permitted
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+[+] Đã index 4 chunks vào collection thocung_articles
+[+] Đã xây dựng index thành công
+[+] RAG engine ready at 23:34:38

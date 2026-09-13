@@ -4,6 +4,10 @@ const path = require('path');
 
 const PORT = 3000;
 
+// Python RAG server endpoint
+const RAG_PORT = 8000;
+const RAG_HOST = '127.0.0.1';
+
 const MIME_TYPES = {
   '.html': 'text/html',
   '.css': 'text/css',
@@ -200,6 +204,7 @@ function sendJSON(res, statusCode, data) {
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
+    req.setEncoding('utf8'); // Ensure UTF-8 encoding
     req.on('data', chunk => { body += chunk; });
     req.on('end', () => {
       try {
@@ -210,6 +215,51 @@ function readBody(req) {
     });
     req.on('error', reject);
   });
+}
+
+// Proxy request to Python RAG server
+function proxyToRAG(req, res, pathname, body) {
+  const postData = body ? JSON.stringify(body) : null;
+  const options = {
+    hostname: RAG_HOST,
+    port: RAG_PORT,
+    path: pathname,
+    method: req.method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': postData ? postData.length : 0
+    }
+  };
+
+  const proxyReq = http.request(options, (proxyRes) => {
+    let data = '';
+    proxyRes.on('data', chunk => { data += chunk; });
+    proxyRes.on('end', () => {
+      try {
+        const parsed = JSON.parse(data);
+        sendJSON(res, 200, parsed);
+      } catch (e) {
+        sendJSON(res, 200, { answer: data, status: 'success' });
+      }
+    });
+  });
+
+  proxyReq.on('error', (err) => {
+    console.error('[RAG Proxy] Lỗi kết nối:', err.message);
+    // Fallback: return local answer
+    sendJSON(res, 200, {
+      answer: 'Hệ thống RAG đang khởi động hoặc tạm thời không khả dụng. Vui lòng thử lại sau!',
+      status: 'fallback'
+    });
+  });
+
+  if (postData) {
+    // Use Buffer.byteLength to correctly calculate byte length for UTF-8
+    const byteLength = Buffer.byteLength(postData, 'utf8');
+    proxyReq.setHeader('Content-Length', byteLength);
+    proxyReq.write(postData, 'utf8');
+  }
+  proxyReq.end();
 }
 
 function handleAPI(req, res) {
@@ -267,10 +317,9 @@ function handleAPI(req, res) {
         id: postId,
         title: postData.title.trim(),
         category: postData.category.trim(),
-        date: postData.date || new Date().toLocaleDateString('vi-VN'), // keep existing date if not provided? we'll use provided or today
+        date: postData.date || new Date().toLocaleDateString('vi-VN'),
         content: postData.content
       };
-      // Ensure file exists before updating
       const filePath = path.join(POST_DIR, postId + '.html');
       if (!fs.existsSync(filePath)) {
         sendJSON(res, 404, { error: 'Không tìm thấy bài viết.' });
@@ -298,6 +347,55 @@ function handleAPI(req, res) {
     return true;
   }
 
+  // POST /api/chat - Chat RAG (ai cũng dùng được)
+  if (req.method === 'POST' && pathname === '/api/chat') {
+    readBody(req).then(body => {
+      const question = (body.question || '').trim();
+      if (!question) {
+        sendJSON(res, 400, { error: 'Câu hỏi không được để trống.' });
+        return;
+      }
+      proxyToRAG(req, res, '/query', body);
+    }).catch(err => sendJSON(res, 400, { error: err.message }));
+    return true;
+  }
+
+  // POST /api/rag/rebuild - Rebuild RAG index (chỉ admin)
+  if (req.method === 'POST' && pathname === '/api/rag/rebuild') {
+    if (!isAdmin(req)) {
+      sendJSON(res, 403, { error: 'Bạn không có quyền cập nhật dữ liệu RAG.' });
+      return true;
+    }
+    proxyToRAG(req, res, '/rebuild', {});
+    return true;
+  }
+
+  // GET /api/rag/status - Kiểm tra trạng thái RAG
+  if (req.method === 'GET' && pathname === '/api/rag/status') {
+    const options = {
+      hostname: RAG_HOST,
+      port: RAG_PORT,
+      path: '/health',
+      method: 'GET'
+    };
+    const proxyReq = http.request(options, (proxyRes) => {
+      let data = '';
+      proxyRes.on('data', chunk => { data += chunk; });
+      proxyRes.on('end', () => {
+        try {
+          sendJSON(res, 200, JSON.parse(data));
+        } catch (e) {
+          sendJSON(res, 200, { rag_status: 'unreachable' });
+        }
+      });
+    });
+    proxyReq.on('error', () => {
+      sendJSON(res, 200, { rag_status: 'unreachable' });
+    });
+    proxyReq.end();
+    return true;
+  }
+
   return false;
 }
 
@@ -310,7 +408,6 @@ const server = http.createServer((req, res) => {
   }
 
   // Chỉ redirect root path "/" về login.html
-  // KHÔNG redirect /index.html
   if (req.url === '/') {
     res.writeHead(302, { 'Location': '/login.html' });
     res.end();
@@ -341,4 +438,5 @@ migrateLegacyPosts();
 
 server.listen(PORT, () => {
   console.log(`Server đang chạy tại: http://localhost:${PORT}`);
+  console.log(`RAG server: http://localhost:${RAG_PORT} (nếu đang chạy)`);
 });

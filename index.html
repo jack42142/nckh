@@ -56,7 +56,10 @@
     <section id="view-posts" class="view-section" style="display: none;">
       <div class="posts-header">
         <h2>Danh Sách Bài Viết</h2>
-        <button class="btn-primary" onclick="toggleModal(true)">+ Tạo bài viết mới</button>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn-primary" onclick="toggleModal(true)">+ Tạo bài viết mới</button>
+          <button class="btn-danger" id="btnRebuildRAG" onclick="rebuildRAG()" style="display: none;" title="Rebuild RAG index from /data/post/">🔄 RAG</button>
+        </div>
       </div>
       <div id="postsGrid" class="posts-grid"></div>
     </section>
