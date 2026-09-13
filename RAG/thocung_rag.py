@@ -33,6 +33,13 @@ EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 VIETMODEL = "keepitreal/vietnamese-sbert"
 MAX_CHARS = 8000  # Max chars per chunk
 
+# Domain keywords for ancestor worship (thờ cúng gia tiên)
+DOMAIN_KEYWORDS = {
+    'thờ cúng', 'gia tiên', 'tổ tiên', 'lễ', 'dâng hương', 'bài văn khấn',
+    'bàn thờ', 'phong thủy', 'nghi lễ', 'đạo hiếu', 'âm lịch', 'may mắn',
+    'bình an', 'tích cực', 'sự thành kính', 'linh hồn', 'chân thành',
+}
+
 # Try to import optional dependencies
 try:
     import chromadb
@@ -46,6 +53,24 @@ try:
     SENTENCE_TRANSFORMERS_AVAILABLE = True
 except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
+
+
+# Domain keywords for ancestor worship (thờ cúng gia tiên)
+DOMAIN_KEYWORDS = {
+    'thờ cúng', 'gia tiên', 'tổ tiên', 'lễ', 'dâng hương', 'bài văn khấn',
+    'bàn thờ', 'phong thủy', 'nghi lễ', 'đạo hiếu', 'âm lịch', 'may mắn',
+    'bình an', 'tích cực', 'sự thành kính', 'linh hồn', 'chân thành',
+}
+
+
+def is_domain_related(question: str) -> bool:
+    """Check if the question is likely related to the ancestor worship domain."""
+    question_lower = question.lower()
+    # Check if any domain keyword appears in the question
+    for keyword in DOMAIN_KEYWORDS:
+        if keyword in question_lower:
+            return True
+    return False
 
 
 # ----------------------------- HTML Parser -----------------------------
@@ -387,6 +412,17 @@ class ThocungRAG:
         """Truy vấn + tạo câu trả lời (extractive cải tiến để nghe tự nhiên hơn)."""
         import time
         start = time.time()
+
+        # First check if the question is likely related to our domain
+        if not is_domain_related(question):
+            elapsed = time.time() - start
+            return {
+                "question": question,
+                "answer": "Xin lỗi, tôi chỉ có thể trả lời các câu hỏi liên quan đến thờ cúng gia tiên và chủ đề tôn giáo truyền thống Việt Nam. Bạn có thể thử đặt câu hỏi khác về chủ đề này?",
+                "sources": [],
+                "retrieval_time_ms": round(elapsed * 1000, 2),
+                "count": 0
+            }
 
         query_result = self.query(question, top_k)
         results = query_result["results"]

@@ -1,26 +1,50 @@
-node:events:486
-      throw er; // Unhandled 'error' event
-      ^
-
-Error: listen EADDRINUSE: address already in use :::3000
-    at Server.setupListenHandle [as _listen2] (node:net:1948:16)
-    at listenInCluster (node:net:2005:12)
-    at Server.listen (node:net:2110:7)
-    at Object.<anonymous> (C:\Users\thien\Downloads\nghiên cứu khoa học\nckh\server.js:433:8)
-    at Module._compile (node:internal/modules/cjs/loader:1812:14)
-    at Object..js (node:internal/modules/cjs/loader:1943:10)
-    at Module.load (node:internal/modules/cjs/loader:1533:32)
-    at Module._load (node:internal/modules/cjs/loader:1335:12)
-    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
-    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
-Emitted 'error' event on Server instance at:
-    at emitErrorNT (node:net:1984:8)
-    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
-  code: 'EADDRINUSE',
-  errno: -4091,
-  syscall: 'listen',
-  address: '::',
-  port: 3000
-}
-
-Node.js v24.14.0
+Server đang chạy tại: http://localhost:3300
+RAG server: http://localhost:8001 (nếu đang chạy)
+[NODE DEBUG] Raw chunk received: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 6c e1 bb 85 20 64 c3 b9 6e 67 20 6c c3 a0 20 67 c3 ac 3f 22 7d>
+[NODE DEBUG] Chunk as hex: 7b227175657374696f6e223a20226ce1bb852064c3b96e67206cc3a02067c3ac3f227d
+[NODE DEBUG] Full buffer: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 6c e1 bb 85 20 64 c3 b9 6e 67 20 6c c3 a0 20 67 c3 ac 3f 22 7d>
+[NODE DEBUG] Full buffer as hex: 7b227175657374696f6e223a20226ce1bb852064c3b96e67206cc3a02067c3ac3f227d
+[NODE DEBUG] Full buffer as UTF-8 string: {"question": "lễ dùng là gì?"}
+Received question: lễ dùng là gì?
+[RAG Proxy] Sending postData: {"question":"lễ dùng là gì?"}
+[RAG Proxy] postData length: 34
+[NODE DEBUG] Raw chunk received: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 54 68 e1 bb 9d 20 63 c3 ba 6e 67 20 67 69 61 20 74 69 c3 aa 6e 20 6c c3 a0 20 67 c3 ac 3f 22 7d>
+[NODE DEBUG] Chunk as hex: 7b227175657374696f6e223a20225468e1bb9d2063c3ba6e6720676961207469c3aa6e206cc3a02067c3ac3f227d
+[NODE DEBUG] Full buffer: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 54 68 e1 bb 9d 20 63 c3 ba 6e 67 20 67 69 61 20 74 69 c3 aa 6e 20 6c c3 a0 20 67 c3 ac 3f 22 7d>
+[NODE DEBUG] Full buffer as hex: 7b227175657374696f6e223a20225468e1bb9d2063c3ba6e6720676961207469c3aa6e206cc3a02067c3ac3f227d
+[NODE DEBUG] Full buffer as UTF-8 string: {"question": "Thờ cúng gia tiên là gì?"}
+Received question: Thờ cúng gia tiên là gì?
+[RAG Proxy] Sending postData: {"question":"Thờ cúng gia tiên là gì?"}
+[RAG Proxy] postData length: 45
+[NODE DEBUG] Raw chunk received: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 54 68 e1 bb 9d 20 63 c3 ba 6e 67 20 67 69 61 20 74 69 c3 aa 6e 20 6c c3 a0 20 67 c3 ac 3f 22 7d>
+[NODE DEBUG] Chunk as hex: 7b227175657374696f6e223a20225468e1bb9d2063c3ba6e6720676961207469c3aa6e206cc3a02067c3ac3f227d
+[NODE DEBUG] Full buffer: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 54 68 e1 bb 9d 20 63 c3 ba 6e 67 20 67 69 61 20 74 69 c3 aa 6e 20 6c c3 a0 20 67 c3 ac 3f 22 7d>
+[NODE DEBUG] Full buffer as hex: 7b227175657374696f6e223a20225468e1bb9d2063c3ba6e6720676961207469c3aa6e206cc3a02067c3ac3f227d
+[NODE DEBUG] Full buffer as UTF-8 string: {"question": "Thờ cúng gia tiên là gì?"}
+Received question: Thờ cúng gia tiên là gì?
+[RAG Proxy] Sending postData: {"question":"Thờ cúng gia tiên là gì?"}
+[RAG Proxy] postData length: 45
+[NODE DEBUG] Raw chunk received: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 4d e1 ba a1 6e 67 20 6d c3 a1 79 20 74 c3 ad 6e 68 20 6c c3 a0 20 67 c3 ac 3f 22 7d>
+[NODE DEBUG] Chunk as hex: 7b227175657374696f6e223a20224de1baa16e67206dc3a1792074c3ad6e68206cc3a02067c3ac3f227d
+[NODE DEBUG] Full buffer: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 4d e1 ba a1 6e 67 20 6d c3 a1 79 20 74 c3 ad 6e 68 20 6c c3 a0 20 67 c3 ac 3f 22 7d>
+[NODE DEBUG] Full buffer as hex: 7b227175657374696f6e223a20224de1baa16e67206dc3a1792074c3ad6e68206cc3a02067c3ac3f227d
+[NODE DEBUG] Full buffer as UTF-8 string: {"question": "Mạng máy tính là gì?"}
+Received question: Mạng máy tính là gì?
+[RAG Proxy] Sending postData: {"question":"Mạng máy tính là gì?"}
+[RAG Proxy] postData length: 41
+[NODE DEBUG] Raw chunk received: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 4d c3 a1 79 20 74 c3 ad 6e 68 20 6c c3 a0 20 67 c3 ac 3f 22 7d>
+[NODE DEBUG] Chunk as hex: 7b227175657374696f6e223a20224dc3a1792074c3ad6e68206cc3a02067c3ac3f227d
+[NODE DEBUG] Full buffer: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 4d c3 a1 79 20 74 c3 ad 6e 68 20 6c c3 a0 20 67 c3 ac 3f 22 7d>
+[NODE DEBUG] Full buffer as hex: 7b227175657374696f6e223a20224dc3a1792074c3ad6e68206cc3a02067c3ac3f227d
+[NODE DEBUG] Full buffer as UTF-8 string: {"question": "Máy tính là gì?"}
+Received question: Máy tính là gì?
+[RAG Proxy] Sending postData: {"question":"Máy tính là gì?"}
+[RAG Proxy] postData length: 34
+[NODE DEBUG] Raw chunk received: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 54 68 e1 bb 9d 20 63 c3 ba 6e 67 20 67 69 61 20 74 69 c3 aa 6e 20 6c c3 a0 20 67 c3 ac 3f 22 7d>
+[NODE DEBUG] Chunk as hex: 7b227175657374696f6e223a20225468e1bb9d2063c3ba6e6720676961207469c3aa6e206cc3a02067c3ac3f227d
+[NODE DEBUG] Full buffer: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 54 68 e1 bb 9d 20 63 c3 ba 6e 67 20 67 69 61 20 74 69 c3 aa 6e 20 6c c3 a0 20 67 c3 ac 3f 22 7d>
+[NODE DEBUG] Full buffer as hex: 7b227175657374696f6e223a20225468e1bb9d2063c3ba6e6720676961207469c3aa6e206cc3a02067c3ac3f227d
+[NODE DEBUG] Full buffer as UTF-8 string: {"question": "Thờ cúng gia tiên là gì?"}
+Received question: Thờ cúng gia tiên là gì?
+[RAG Proxy] Sending postData: {"question":"Thờ cúng gia tiên là gì?"}
+[RAG Proxy] postData length: 45

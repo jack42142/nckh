@@ -36,7 +36,7 @@ from thocung_rag import ThocungRAG, POST_DIR
 # ----------------------------- Config -----------------------------
 
 APP_TITLE = "Thocung RAG API"
-DEFAULT_PORT = 8000
+DEFAULT_PORT = 8001
 
 
 # ----------------------------- Schemas -----------------------------
@@ -168,6 +168,7 @@ async def query(request: QueryRequest):
     try:
         # Debug: print the request
         print(f"DEBUG: Received question: {request.question!r}, top_k: {request.top_k!r}")
+        print(f"DEBUG: Question bytes: {request.question.encode('utf-8')!r}")
         result = get_rag().generate_answer(request.question, request.top_k)
         print(f"DEBUG: Generated answer successfully")
         return {

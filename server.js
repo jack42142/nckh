@@ -2,10 +2,10 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 3000;
+const PORT = 3300;
 
 // Python RAG server endpoint
-const RAG_PORT = 8000;
+const RAG_PORT = 8001;
 const RAG_HOST = '127.0.0.1';
 
 const MIME_TYPES = {
@@ -203,13 +203,22 @@ function sendJSON(res, statusCode, data) {
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
-    let body = '';
-    req.setEncoding('utf8'); // Ensure UTF-8 encoding
-    req.on('data', chunk => { body += chunk; });
+    let chunks = [];
+    req.on('data', chunk => {
+      chunks.push(chunk);
+      console.log('[NODE DEBUG] Raw chunk received:', chunk);
+      console.log('[NODE DEBUG] Chunk as hex:', chunk.toString('hex'));
+    });
     req.on('end', () => {
       try {
+        const buffer = Buffer.concat(chunks);
+        console.log('[NODE DEBUG] Full buffer:', buffer);
+        console.log('[NODE DEBUG] Full buffer as hex:', buffer.toString('hex'));
+        console.log('[NODE DEBUG] Full buffer as UTF-8 string:', buffer.toString('utf8'));
+        const body = buffer.toString('utf8');
         resolve(body ? JSON.parse(body) : {});
       } catch (err) {
+        console.log('[NODE DEBUG] JSON parse error:', err);
         reject(new Error('Dữ liệu không hợp lệ'));
       }
     });
@@ -220,14 +229,15 @@ function readBody(req) {
 // Proxy request to Python RAG server
 function proxyToRAG(req, res, pathname, body) {
   const postData = body ? JSON.stringify(body) : null;
+  console.log('[RAG Proxy] Sending postData:', postData);
+  console.log('[RAG Proxy] postData length:', Buffer.byteLength(postData || '', 'utf8'));
   const options = {
     hostname: RAG_HOST,
     port: RAG_PORT,
     path: pathname,
     method: req.method,
     headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': postData ? postData.length : 0
+      'Content-Type': 'application/json; charset=utf-8'
     }
   };
 
@@ -351,6 +361,7 @@ function handleAPI(req, res) {
   if (req.method === 'POST' && pathname === '/api/chat') {
     readBody(req).then(body => {
       const question = (body.question || '').trim();
+      console.log('Received question:', question);
       if (!question) {
         sendJSON(res, 400, { error: 'Câu hỏi không được để trống.' });
         return;

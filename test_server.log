@@ -1,0 +1,141 @@
+Test server listening on port 3000
+Received request:
+  Method: POST
+  URL: /test
+  Headers: {
+  "host": "localhost:3000",
+  "user-agent": "curl/8.18.0",
+  "accept": "*/*",
+  "content-type": "application/json; charset=utf-8",
+  "content-length": "17"
+}
+  Data chunk: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 22 6c 3f 22 7d>
+  Data chunk hex: 7b227175657374696f6e223a226c3f227d
+  Data chunk as UTF-8: {"question":"l?"}
+  Full body: {"question":"l?"}
+  Full body length: 17
+  Full body bytes: [
+  123,  34, 113, 117, 101,
+  115, 116, 105, 111, 110,
+   34,  58,  34, 108,  63,
+   34, 125
+]
+Received request:
+  Method: POST
+  URL: /test
+  Headers: {
+  "host": "localhost:3000",
+  "accept-encoding": "identity",
+  "content-length": "23",
+  "content-type": "application/json; charset=utf-8"
+}
+  Data chunk: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 6c 5c 75 31 65 63 35 22 7d>
+  Data chunk hex: 7b227175657374696f6e223a20226c5c7531656335227d
+  Data chunk as UTF-8: {"question": "l\u1ec5"}
+  Full body: {"question": "l\u1ec5"}
+  Full body length: 23
+  Full body bytes: [
+  123,  34, 113, 117, 101, 115, 116,
+  105, 111, 110,  34,  58,  32,  34,
+  108,  92, 117,  49, 101,  99,  53,
+   34, 125
+]
+Received request:
+  Method: POST
+  URL: /test
+  Headers: {
+  "host": "localhost:3000",
+  "accept-encoding": "identity",
+  "content-length": "20",
+  "content-type": "application/json; charset=utf-8"
+}
+  Data chunk: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 6c e1 bb 85 22 7d>
+  Data chunk hex: 7b227175657374696f6e223a20226ce1bb85227d
+  Data chunk as UTF-8: {"question": "lễ"}
+  Full body: {"question": "lễ"}
+  Full body length: 18
+  Full body bytes: [
+   123,  34, 113, 117, 101,
+   115, 116, 105, 111, 110,
+    34,  58,  32,  34, 108,
+  7877,  34, 125
+]
+Received request:
+  Method: POST
+  URL: /test
+  Headers: {
+  "host": "localhost:3000",
+  "accept-encoding": "identity",
+  "content-length": "20",
+  "content-type": "application/json; charset=utf-8"
+}
+  Data chunk: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 6c e1 bb 85 22 7d>
+  Data chunk hex: 7b227175657374696f6e223a20226ce1bb85227d
+  Data chunk as UTF-8: {"question": "lễ"}
+  Full body: {"question": "lễ"}
+  Full body length: 18
+  Full body bytes: [
+   123,  34, 113, 117, 101,
+   115, 116, 105, 111, 110,
+    34,  58,  32,  34, 108,
+  7877,  34, 125
+]
+Received request:
+  Method: POST
+  URL: /test
+  Headers: {
+  "host": "localhost:3000",
+  "content-type": "application/json; charset=utf-8",
+  "content-length": "20"
+}
+  Data chunk: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 6c e1 bb 85 22 7d>
+  Data chunk hex: 7b227175657374696f6e223a20226ce1bb85227d
+  Data chunk as UTF-8: {"question": "lễ"}
+  Full body: {"question": "lễ"}
+  Full body length: 18
+  Full body bytes: [
+   123,  34, 113, 117, 101,
+   115, 116, 105, 111, 110,
+    34,  58,  32,  34, 108,
+  7877,  34, 125
+]
+Received request:
+  Method: POST
+  URL: /test
+  Headers: {
+  "host": "localhost:3000",
+  "content-type": "application/json; charset=utf-8",
+  "content-length": "20"
+}
+  Data chunk: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 6c e1 bb 85 22 7d>
+  Data chunk hex: 7b227175657374696f6e223a20226ce1bb85227d
+  Data chunk as UTF-8: {"question": "lễ"}
+  Full body: {"question": "lễ"}
+  Full body length: 18
+  Full body bytes: [
+   123,  34, 113, 117, 101,
+   115, 116, 105, 111, 110,
+    34,  58,  32,  34, 108,
+  7877,  34, 125
+]
+Received request:
+  Method: POST
+  URL: /test
+  Headers: {
+  "host": "localhost:3000",
+  "user-agent": "curl/8.18.0",
+  "accept": "*/*",
+  "content-type": "application/json; charset=utf-8",
+  "content-length": "20"
+}
+  Data chunk: <Buffer 7b 22 71 75 65 73 74 69 6f 6e 22 3a 20 22 6c e1 bb 85 22 7d>
+  Data chunk hex: 7b227175657374696f6e223a20226ce1bb85227d
+  Data chunk as UTF-8: {"question": "lễ"}
+  Full body: {"question": "lễ"}
+  Full body length: 18
+  Full body bytes: [
+   123,  34, 113, 117, 101,
+   115, 116, 105, 111, 110,
+    34,  58,  32,  34, 108,
+  7877,  34, 125
+]
